@@ -2,6 +2,8 @@ const gameBoard = document.querySelector('#gameboard')
 const playerDisplay = document.querySelector('#player')
 const infoDisplay = document.querySelector('#info-display')
 const width = 8;
+let playerTurn = 'white'
+playerDisplay.textContent = 'white'
 
 const startPieces = [
   rook, knight, bishop, queen, king, bishop, knight, rook,
@@ -37,7 +39,7 @@ function createBoard() {
 }
 createBoard()
 
-const allSquares = document.querySelectorAll("#gameboard .square")
+const allSquares = document.querySelectorAll(" .square")
 
 allSquares.forEach(square => {
   square.addEventListener('dragstart', dragStart)
@@ -59,10 +61,35 @@ function dragOver(e) {
 
 function dragDrop(e) {
   e.stopPropagation();
+  console.log(e.target)
+  const taken = e.target.classList.contains('piece')
 
   e.target.parentNode.append(draggedElement)
   e.target.remove()
+  changePlayer()
 
 }
 
+function changePlayer() {
+  if (playerTurn === 'white') {
+    playerTurn = "black"
+    reverseIds()
+    playerDisplay.textContent = 'black'
+  } else {
+    revertIds()
+    playerTurn = "white"
+    playerDisplay.textContent = 'white'
+  }
+}
+
+function reverseIds() {
+  const allSquares = document.querySelectorAll('.square')
+  allSquares.forEach((square, i) => square.setAttribute('square-id', (width * width - 1) - i));
+}
+
+
+function revertIds() {
+  const allSquares = document.querySelectorAll('.square')
+  allSquares.forEach((square, i) => square.setAttribute('square-id', i));
+}
 

@@ -61,13 +61,39 @@ function dragOver(e) {
 
 function dragDrop(e) {
   e.stopPropagation();
-  console.log(e.target)
+  const correctTurn = draggedElement.firstChild.classList.contains(playerTurn)
   const taken = e.target.classList.contains('piece')
+  const valid = checkIfValid(e.target)
+  const opponentTurn = playerTurn === 'black' ? 'white' : 'black'
+  const pieceTakenByOpponent = e.target.firstChild?.classList.contains(opponentTurn)
 
-  e.target.parentNode.append(draggedElement)
-  e.target.remove()
+  if (correctTurn) {
+    // Need to check this first 
+    if (pieceTakenByOpponent && valid) {
+      e.target.parentNode.append(draggedElement)
+      e.target.remove()
+      changePlayer()
+      return
+    }
+  }
+  // 
+  if (pieceTakenByOpponent) {
+    infoDisplay.textContent = "Not a valid move!"
+    setTimeout(() => infoDisplay.textContent = "", 3000)
+    return
+  }
+  if (valid) {
+    e.target.append(draggedElement)
+    changePlayer()
+    return
+  }
+
   changePlayer()
+}
 
+function checkIfValid(target) {
+  console.log(target)
+  const targetId = target.getAttribute('square-id')
 }
 
 function changePlayer() {

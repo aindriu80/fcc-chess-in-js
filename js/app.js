@@ -93,27 +93,118 @@ function dragDrop(e) {
   changePlayer()
 }
 
-function checkIfValid(target) {
-  const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'))
-  const startId = Number(startPositionId)
-  const piece = draggedElement.id
-  console.log('targetId:', targetId)
-  console.log('startId:', startId)
-  console.log('piece moved:', piece)
+// function checkIfValid(target) {
+//   const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'))
+//   const startId = Number(startPositionId)
+//   const piece = draggedElement.id
+//   console.log('targetId:', targetId)
+//   console.log('startId:', startId)
+//   console.log('piece moved:', piece)
+//
+//
+//   switch (piece) {
+//     case 'pawn':
+//       const starterRow = [8, 9, 10, 11, 12, 13, 14, 15]
+//       if (starterRow.includes(startId) && startId + width * 2 === targetId ||
+//         startId + width === targetId ||
+//         startId + width - 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild ||
+//         startId + width + 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild
+//       ) {
+//         return true
+//       }
+//       break;
+//     case 'knight':
+//       if (
+//         startId + width * 2 + 1 === targetId ||
+//         startId + width * 2 - 1 === targetId ||
+//         startId + width - 2 === targetId ||
+//         startId + width + 2 === targetId ||
+//         startId - width * 2 + 1 === targetId ||
+//         startId - width * 2 - 1 === targetId ||
+//         startId - width - 2 === targetId ||
+//         startId - width + 2 === targetId
+//       ) {
+//         return true;
+//       }
+//       break;
+//     case 'bishop':
+//       if (
+//         startId + width + 1 === targetId ||
+//         startId + width * 2 + 2 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild ||
+//           startId + width * 3 + 3 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&startId + width * 3 + 3 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild 
+//             startId + width * 4 + 4 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
+//               startId + width * 5 + 5 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
+//                 startId + width * 6 + 6 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
+//                   startId + width * 7 + 7 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild
+//                   ) 
+//   }
+// }
 
+function checkIfValid(target) {
+  const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'));
+  const startId = Number(startPositionId);
+  const piece = draggedElement.id;
+  console.log('targetId:', targetId);
+  console.log('startId:', startId);
+  console.log('piece moved:', piece);
+
+  const width = 8;  // Assuming the chessboard width is 8 squares
 
   switch (piece) {
     case 'pawn':
-      const starterRow = [8, 9, 10, 11, 12, 13, 14, 15]
+      const starterRow = [8, 9, 10, 11, 12, 13, 14, 15];
       if (starterRow.includes(startId) && startId + width * 2 === targetId ||
         startId + width === targetId ||
         startId + width - 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild ||
-        startId + width + 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild
+        startId + width + 1 === targetId && document.querySelector(`[square-id="${startId + width + 1}"]`).firstChild
       ) {
-        return true
+        return true;
       }
+      break;
+    case 'knight':
+      if (
+        startId + width * 2 + 1 === targetId ||
+        startId + width * 2 - 1 === targetId ||
+        startId + width - 2 === targetId ||
+        startId + width + 2 === targetId ||
+        startId - width * 2 + 1 === targetId ||
+        startId - width * 2 - 1 === targetId ||
+        startId - width - 2 === targetId ||
+        startId - width + 2 === targetId
+      ) {
+        return true;
+      }
+      break;
+    case 'bishop':
+      // Diagonal movement logic for bishop
+      const deltaX = targetId % width - startId % width;
+      const deltaY = Math.floor(targetId / width) - Math.floor(startId / width);
+
+      // Check if the move is diagonal (abs(deltaX) === abs(deltaY))
+      if (Math.abs(deltaX) === Math.abs(deltaY)) {
+        let xDirection = deltaX > 0 ? 1 : -1;
+        let yDirection = deltaY > 0 ? 1 : -1;
+
+        // Check if there are any pieces blocking the diagonal path
+        let currentX = startId % width;
+        let currentY = Math.floor(startId / width);
+
+        // Traverse the diagonal path and check for any blocking pieces
+        while (currentX !== targetId % width && currentY !== Math.floor(targetId / width)) {
+          currentX += xDirection;
+          currentY += yDirection;
+
+          const squareId = currentY * width + currentX;
+          if (document.querySelector(`[square-id="${squareId}"]`).firstChild) {
+            return false; // Blocked by a piece
+          }
+        }
+        return true; // Valid move if no pieces are blocking
+      }
+      break;
   }
 }
+
 
 function changePlayer() {
   if (playerTurn === 'white') {

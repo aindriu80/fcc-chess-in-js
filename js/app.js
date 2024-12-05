@@ -53,7 +53,7 @@ let draggedElement
 function dragStart(e) {
   startPositionId = e.target.parentNode.getAttribute('square-id')
   draggedElement = e.target
-  console.log(startPositionId)
+  console.log('Dragging piece:', draggedElement.id);
 }
 
 function dragOver(e) {
@@ -62,18 +62,27 @@ function dragOver(e) {
 
 function dragDrop(e) {
   e.stopPropagation();
-  const correctTurn = draggedElement.firstChild.classList.contains(playerTurn)
-  const taken = e.target.classList.contains('piece')
-  const valid = checkIfValid(e.target)
-  const opponentTurn = playerTurn === 'black' ? 'white' : 'black'
-  const pieceTakenByOpponent = e.target.firstChild?.classList.contains(opponentTurn)
+  e.preventDefault();
+
+  const targetSquare = e.target.classList.contains('square') ? e.target : e.target.parentNode; // Ensure we are targeting the square
+  const correctTurn = draggedElement.classList.contains(playerTurn);
+  const valid = checkIfValid(targetSquare);
+  const opponentTurn = playerTurn === 'black' ? 'white' : 'black';
+  const pieceTakenByOpponent = targetSquare.firstChild?.classList.contains(opponentTurn);
+
+  // const correctTurn = draggedElement.firstChild.classList.contains(playerTurn)
+  // const taken = e.target.classList.contains('piece')
+  // const valid = checkIfValid(e.target)
+  // const opponentTurn = playerTurn === 'black' ? 'white' : 'black'
+  // const pieceTakenByOpponent = e.target.firstChild?.classList.contains(opponentTurn)
 
   if (correctTurn) {
     // Need to check this first 
     if (pieceTakenByOpponent && valid) {
-      e.target.parentNode.append(draggedElement)
-      e.target.remove()
-      changePlayer()
+      targetSquare.firstChild?.remove(); // Remove only the opponent's piece
+      targetSquare.append(draggedElement); // Move the dragged piece
+      changePlayer();
+
       return
     }
   }
@@ -84,8 +93,7 @@ function dragDrop(e) {
     return
   }
   if (valid) {
-    e.target.append(draggedElement)
-    console.log('target', e.target.append(draggedElement))
+    targetSquare.append(draggedElement); // Move the piece to the target square
     changePlayer()
     return
   }
@@ -93,60 +101,11 @@ function dragDrop(e) {
   changePlayer()
 }
 
-// function checkIfValid(target) {
-//   const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'))
-//   const startId = Number(startPositionId)
-//   const piece = draggedElement.id
-//   console.log('targetId:', targetId)
-//   console.log('startId:', startId)
-//   console.log('piece moved:', piece)
-//
-//
-//   switch (piece) {
-//     case 'pawn':
-//       const starterRow = [8, 9, 10, 11, 12, 13, 14, 15]
-//       if (starterRow.includes(startId) && startId + width * 2 === targetId ||
-//         startId + width === targetId ||
-//         startId + width - 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild ||
-//         startId + width + 1 === targetId && document.querySelector(`[square-id="${startId + width - 1}"]`).firstChild
-//       ) {
-//         return true
-//       }
-//       break;
-//     case 'knight':
-//       if (
-//         startId + width * 2 + 1 === targetId ||
-//         startId + width * 2 - 1 === targetId ||
-//         startId + width - 2 === targetId ||
-//         startId + width + 2 === targetId ||
-//         startId - width * 2 + 1 === targetId ||
-//         startId - width * 2 - 1 === targetId ||
-//         startId - width - 2 === targetId ||
-//         startId - width + 2 === targetId
-//       ) {
-//         return true;
-//       }
-//       break;
-//     case 'bishop':
-//       if (
-//         startId + width + 1 === targetId ||
-//         startId + width * 2 + 2 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild ||
-//           startId + width * 3 + 3 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&startId + width * 3 + 3 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild 
-//             startId + width * 4 + 4 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
-//               startId + width * 5 + 5 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
-//                 startId + width * 6 + 6 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild &&
-//                   startId + width * 7 + 7 && !document.querySelector(`[square=id="${startId + width + 1}"]`.firstChild
-//                   ) 
-//   }
-// }
-
 function checkIfValid(target) {
   const targetId = Number(target.getAttribute('square-id')) || Number(target.parentNode.getAttribute('square-id'));
   const startId = Number(startPositionId);
   const piece = draggedElement.id;
-  console.log('targetId:', targetId);
-  console.log('startId:', startId);
-  console.log('piece moved:', piece);
+  console.log('Checking validity for:', piece, 'from', startId, 'to', targetId);
 
   const width = 8;  // Assuming the chessboard width is 8 squares
 
@@ -202,7 +161,35 @@ function checkIfValid(target) {
         return true; // Valid move if no pieces are blocking
       }
       break;
+    case 'rook':
+      // Check if the move is horizontal or vertical
+      const isSameRow = Math.floor(startId / width) === Math.floor(targetId / width);
+      const isSameColumn = startId % width === targetId % width;
+
+      if (isSameRow || isSameColumn) {
+        let direction; // Direction to traverse the path
+        if (isSameRow) {
+          direction = startId < targetId ? 1 : -1; // Left to right or right to left
+        } else {
+          direction = startId < targetId ? width : -width; // Up or down
+        }
+
+        // Traverse the path from startId to targetId
+        let currentId = startId + direction;
+        while (currentId !== targetId) {
+          // Check if the path is blocked
+          if (document.querySelector(`[square-id="${currentId}"]`).firstChild) {
+            return false; // Path is blocked
+          }
+          currentId += direction;
+        }
+
+        return true; // Path is clear, valid move
+      }
+      break;
+
   }
+
 }
 
 
